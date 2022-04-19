@@ -50,8 +50,9 @@ class User extends Authenticatable
      */
     public function loadRelationshipCounts()
     {
-        $this->loadCount('microposts');
+        $this->loadCount('microposts', 'followings', 'followers');
     }
+    
     
     /**
      * このユーザがフォロー中のユーザ。（ Userモデルとの関係を定義）
