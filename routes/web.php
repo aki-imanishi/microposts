@@ -31,6 +31,13 @@ Route::group(['middleware' => ['auth']], function () {
     });
 
     Route::resource('users', 'UsersController', ['only' => ['index', 'show']]); //ユーザ一覧、ユーザ詳細（UsersController）
+    
+    Route::group(['prefix' => 'microposts/{id}'], function () { //「/microposts/{id}/」が付与されたURLで値を渡す
+        Route::post('favorite', 'FavoritesController@store')->name('favorites.favorite'); //favoriteする
+        Route::delete('unfavorite', 'FavoritesController@destroy')->name('favorites.unfavorite'); //unfavoriteする
+        Route::get('favorites', 'UsersController@favorites')->name('favorites.favorites'); //favorite一覧の表示
+    });
+    
     Route::resource('microposts', 'MicropostsController', ['only' => ['store', 'destroy']]); //投稿操作
 });
 

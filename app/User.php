@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Favorite;
 
 class User extends Authenticatable
 {
@@ -50,7 +51,7 @@ class User extends Authenticatable
      */
     public function loadRelationshipCounts()
     {
-        $this->loadCount('microposts', 'followings', 'followers');
+        $this->loadCount('microposts', 'followings', 'followers', 'favorites');
     }
     
     
@@ -140,6 +141,58 @@ class User extends Authenticatable
         $userIds[] = $this->id;
         // それらのユーザが所有する投稿に絞り込む
         return Micropost::whereIn('user_id', $userIds); //micropostsテーブルのデータのうち$userIds配列の値と合致するuser_idを持つものに絞り込んで値を返す
+    }
+    
+    
+    /**
+     * このユーザがfavoriteしたmicropost。（Micropostモデルとの関係を定義）
+     */
+    public function favorites(){
+        return $this->belongsToMany(Micropost::class, 'favorites', 'user_id', 'micropost_id')->withTimestamps();
+         //(関係先のModelのクラス, 中間テーブル, 中間テーブルに保存されてるuserIDのカラム名, 中間テーブルに保存されてる関係先のカラム名)
+         //user_idのユーザはmicropost_idのpostをfavoriteしている
+    }
+    
+    public function favorite($micropost_id) {
+        // すでにfavoriteしているか
+        $exist = $this->is_favorite($micropost_id);
+
+        if ($exist == true) {
+            // favorite済みの場合は何もしない
+            return false;
+        } else {
+            // 上記以外はfavoriteする
+           $favoriteModel = new Favorite();
+           $favoriteModel->user_id = $this->id;
+           $favoriteModel->micropost_id = $micropost_id;
+           $favoriteModel->save();
+           
+            return true;
+        }
+    }
+    
+    public function unfavorite($micropost_id) {
+        // すでにfavoriteしているか
+        $exist = $this->is_favorite($micropost_id);
+
+        if ($exist == true) {
+            // favoriteしている場合はunfavoriteする
+            $favoriteModel = Favorite::where('micropost_id', $micropost_id)
+            ->where('user_id', $this->id)
+            ->first();
+            $favoriteModel->delete();
+            return true;
+        } else {
+            // 上記以外の場合は何もしない
+            return false;
+        }
+    }
+    
+    public function is_favorite($micropost_id)
+    {
+        return $this->favorites()->where('micropost_id', $micropost_id)->exists();
+        //favoritesメソッドの中でテーブルのレコードに保存されたmicropost_idと、$micropost_idが一致するかどうか
+        //boolean型でreturn(レコードが存在してたらtrue/存在してなかったらfalse)
     }
 
 
