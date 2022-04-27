@@ -87,13 +87,13 @@ class UsersController extends Controller
     
     public function favorites($id) //$idにはmicropostをfavoriteしたユーザのuserIdが入る
     {
-        //idの値でuserを検索して取得
+        //$idで取得した値がuserのデータにあるのかを検索して、一致すればユーザの情報を取得
         $user = User::findOrFail($id);
         
         // 関係するモデルの件数をロード
         $user->loadRelationshipCounts();
         
-        //favoriteしたmicropost一覧を取得
+        //ユーザがfavoriteしたmicropost一覧を、Userモデルのfavorites()で取得
         $favorites = $user->favorites()->paginate(10);
         
         // favorite一覧ビューでそれらを表示
